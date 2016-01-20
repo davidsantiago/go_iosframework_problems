@@ -1,0 +1,46 @@
+
+# Won't build without a config.h file included. Intended to be from configure
+# script, but it seems to work as an empty file.
+genrule(
+    name = 'config_h',
+    outs = ['config.h'],
+    cmd = 'touch $@',
+)
+
+cc_library(
+  name = "protoc-gen-swift-lib",
+  srcs = [
+    ":config_h",
+    "plugin/compiler/google/protobuf/swift-descriptor.pb.cc"
+  ] + glob(
+    ["plugin/compiler/*.cc", "plugin/compiler/*.h"],
+    exclude = ["plugin/compiler/test/**", "plugin/compiler/Makefile.am",]
+  ),
+  includes = ["plugin/compiler"],
+  deps = [
+    "@protobuf//:protobuf",
+    "@protobuf//:protoc_lib",
+  ],
+)
+
+cc_binary(
+  name = "protoc-gen-swift",
+  deps = [":protoc-gen-swift-lib"],
+  visibility = ["//visibility:public"],
+)
+
+ios_framework_binary(
+  name = "swift_pb_runtime_lib",
+  srcs = [
+
+  ] + glob(
+    ["Source/*"],
+  ),
+)
+
+ios_framework(
+  name = "ProtocolBuffers",
+  binary = "swift_pb_runtime_lib",
+  hdrs = ["Source/ProtocolBuffer.h"],
+  visibility = ["//visibility:public"],
+)
